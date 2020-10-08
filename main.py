@@ -2,6 +2,7 @@
 from GUI.error import MyApp1 as error
 from GUI.settings_ui import MyApp1 as settings
 from GUI.strategy_builder_ui import MyApp1 as SB
+from GUI.spread_analyzer_ui import MyApp1 as SA
 import sys
 import os
 from PyQt5.QtWidgets import QMainWindow, QApplication
@@ -23,7 +24,7 @@ class MyApp(QMainWindow, Ui_ThetaTrader): #gui class
         #set up callbacks
         self.b0.clicked.connect(self.placeholder)
         self.b1.clicked.connect(self.open_SB)
-        self.b2.clicked.connect(self.placeholder)
+        self.b2.clicked.connect(self.open_SA)
         self.b3.clicked.connect(self.placeholder)
         self.b5.clicked.connect(self.open_settings)
         self.b4.clicked.connect(self.close)
@@ -41,6 +42,11 @@ class MyApp(QMainWindow, Ui_ThetaTrader): #gui class
 
     def open_SB(self):
         dialog = SB()
+        self.dialogs.append(dialog)
+        dialog.show()
+
+    def open_SA(self):
+        dialog = SA()
         self.dialogs.append(dialog)
         dialog.show()
 

@@ -180,6 +180,13 @@
      <property name="sizeConstraint">
       <enum>QLayout::SetDefaultConstraint</enum>
      </property>
+     <item row="0" column="5">
+      <widget class="QLabel" name="label_14">
+       <property name="text">
+        <string>PX</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="3">
       <widget class="QLineEdit" name="lineEdit"/>
      </item>
@@ -247,21 +254,27 @@
      <item row="0" column="4">
       <widget class="QLabel" name="label_11">
        <property name="text">
-        <string>Amount</string>
+        <string>QTY</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="5">
+     <item row="0" column="6">
+      <widget class="QWidget" name="widget_2" native="true"/>
+     </item>
+     <item row="1" column="6">
       <widget class="QWidget" name="widget" native="true"/>
+     </item>
+     <item row="1" column="5">
+      <widget class="QLineEdit" name="lineEdit_5"/>
      </item>
     </layout>
    </widget>
    <widget class="QWidget" name="gridLayoutWidget_2">
     <property name="geometry">
      <rect>
-      <x>522</x>
+      <x>432</x>
       <y>420</y>
-      <width>481</width>
+      <width>571</width>
       <height>41</height>
      </rect>
     </property>
@@ -320,7 +333,7 @@
      <item row="0" column="1">
       <widget class="QLineEdit" name="lineEdit_4">
        <property name="text">
-        <string>50</string>
+        <string>30</string>
        </property>
       </widget>
      </item>
@@ -331,7 +344,7 @@
      <rect>
       <x>10</x>
       <y>60</y>
-      <width>651</width>
+      <width>781</width>
       <height>41</height>
      </rect>
     </property>

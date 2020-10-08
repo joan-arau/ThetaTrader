@@ -6,7 +6,7 @@ from threading import Timer
 from ibapi.contract import Contract
 
 from configparser import ConfigParser
-
+from random import randint
 import csv
 
 temp_file = '/Users/joan/PycharmProjects/ThetaTrader/db/temp.csv'
@@ -21,7 +21,7 @@ port = int(config.get('main', 'ibkr_port'))
 from ib_insync import *
 
 ib = IB()
-ib.connect('127.0.0.1', port, clientId=11)
+# ib.connect('127.0.0.1', port, clientId=20)
 # amd = Stock('AMD', 'SMART', 'USD')
 #
 # # cds = ib.reqContractDetails(amd)
@@ -36,9 +36,10 @@ ib.connect('127.0.0.1', port, clientId=11)
 
 class TestApp(EWrapper, EClient):
 
-    def __init__(self,ticker,conid):
+    def __init__(self,ticker):
+        # ib.connect('127.0.0.1', port, clientId=30)
         self.ticker = ticker
-        self.conid= conid
+        self.conid= ib.qualifyContracts(Stock(ticker, 'SMART', 'USD'))[0].conId
         EClient.__init__(self, self)
 
     def error(self, reqId, errorCode, errorString):
@@ -53,7 +54,7 @@ class TestApp(EWrapper, EClient):
     def securityDefinitionOptionParameter(self, reqId:int, exchange:str, underlyingConId:int, tradingClass:str, multiplier:str, expirations:SetOfString, strikes:SetOfFloat):
         # print("SecurityDefinitionOptionParameter.", "ReqId:", reqId, "Exchange:", exchange, "Underlying conId:", underlyingConId, "TradingClass:", tradingClass, "Multiplier:", multiplier, "Expirations:", expirations, "Strikes:", str(strikes),"\n")
         dets = {"ReqId":reqId, "Exchange":exchange, "Underlying conId":underlyingConId, "TradingClass": tradingClass, "Multiplier": multiplier, "Expirations": expirations,"Strikes": str(strikes)}
-        # print(dets['Expirations'])
+        print(dets['Expirations'])
         with open(temp_file, 'w', newline='') as myfile:
             wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
             wr.writerow(sorted(dets['Expirations']))
@@ -72,16 +73,22 @@ class TestApp(EWrapper, EClient):
     def stop(self):
 
         self.done = True
+
         self.disconnect()
+        # self.waitOnUpdate(timeout=0.1)
+
 
 def main(ticker):
 
     ticker= ticker
-    conid = ib.qualifyContracts(Stock(ticker, 'SMART', 'USD'))[0].conId
-    app = TestApp(ticker= ticker,conid=conid)
+    iB = ib.connect("127.0.0.1", port, 20)
+    app = TestApp(ticker=ticker)
+
+    # conid = ib.qualifyContracts(Stock(ticker, 'SMART', 'USD'))[0].conId
+
     app.nextOrderId = 0
     # TWs 7497, IBGW 4001
-    app.connect("127.0.0.1", port, 0)
+
 
 
 
@@ -89,6 +96,11 @@ def main(ticker):
 
     Timer(4, app.stop).start()
     app.run()
+    print(iB.isConnected())
+    iB.disconnect()
+    iB.waitOnUpdate(timeout=0.1)
+    print(iB.isConnected())
+    print('OD Disconnected')
 
 if __name__ == "__main__":
     main('AMD')

@@ -3,15 +3,17 @@ import os
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5 import uic
 import qdarkstyle
-
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
 from configparser import ConfigParser
 config = ConfigParser()
-config.read('config.ini')
+conf_path = '/Users/joan/PycharmProjects/ThetaTrader/config.ini'
+config.read(conf_path)
 
+port = int(config.get('main', 'ibkr_port'))
 
 # path = os.path.dirname(__file__) #uic paths from itself, not the active dir, so path needed
 qtCreatorFile = "/Users/joan/PycharmProjects/ThetaTrader/GUI/settings_ui.ui" #Ui file name, from QtDesigner, assumes in same folder as this .py
@@ -25,8 +27,24 @@ class MyApp1(QMainWindow, Ui_Settings): #gui class
 
         self.setupUi(self)
 
-        self.port_in.setText(config.get('main', 'ibkr_port'))
+        # self.port_in.setText(config.get('main', 'ibkr_port'))
 
+
+
+        self.comboBox.addItems(['IBGW [4001]','TWS [7497]'])
+
+        print(port)
+
+        if port == 4001:
+            self.comboBox.setCurrentIndex(0)
+        else:
+            self.comboBox.setCurrentIndex(1)
+
+
+
+
+        self.delegate = QtWidgets.QStyledItemDelegate()
+        self.comboBox.setItemDelegate(self.delegate)
 
         #set up callbacks
 
@@ -37,9 +55,16 @@ class MyApp1(QMainWindow, Ui_Settings): #gui class
 
 
     def save_port(self):
-        port =self.port_in.text()
+
+        if self.comboBox.currentText() == 'IBGW [4001]':
+            port = '4001'
+        else:
+            port = '7497'
+
+
+        # port =self.port_in.text()
         config.set('main', 'ibkr_port', port)
-        with open('config.ini', 'w') as f:
+        with open(conf_path, 'w') as f:
             config.write(f)
         # print(port)
 

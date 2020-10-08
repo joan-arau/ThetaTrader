@@ -23,7 +23,7 @@ pd.set_option('display.width', 1000)
 
 
 
-def greeks(pos,ticker,target_value, flag, S, K,t0,t1, r, div,IV_only = False):
+def greeks(pos,ticker,target_value, flag, S, K,t0,t1, r, div,px = '',IV_only = False):
 
     if flag == 'C':
         call_put = 'Call'
@@ -53,7 +53,11 @@ def greeks(pos,ticker,target_value, flag, S, K,t0,t1, r, div,IV_only = False):
         greeks = engine.risk_parameters(**risk_parameters)
         greeks['Contract'] = [ticker,t1,str(K),flag]
         greeks['IV'] = sigma
-        greeks['Avg px'] = target_value
+
+        if px == '':
+            greeks['Avg px'] = target_value
+        else:
+            greeks['Avg px'] = px
         greeks['DTE'] = delta.days
         greeks['pos'] = pos
         # print(greeks)
@@ -129,7 +133,7 @@ def generate_pnl_surface(ticker,opt_df,r,div,s,stds,strat_name= '',stockleg=None
         strike = float(o[1]['strike'])
 
         opt = get_opt(ticker,o[1]['exp'],strike,kind)
-
+        print(opt)
 
         delta = datetime.strptime(o[1]['exp'], '%Y%m%d') - datetime.strptime(t0, '%Y%m%d')
         delta_days = delta.days
@@ -141,8 +145,10 @@ def generate_pnl_surface(ticker,opt_df,r,div,s,stds,strat_name= '',stockleg=None
         elif opt['last'] > 0: price = opt['last']
         else: price = opt['close']
 
-
-        parms.append([o[1]['amt'],ticker,price,kind,s,strike,t0,o[1]['exp'],r,div])
+        if o[1]['px'] == '':
+            parms.append([o[1]['amt'],ticker,price,kind,s,strike,t0,o[1]['exp'],r,div])
+        else:
+            parms.append([o[1]['amt'], ticker, price, kind, s, strike, t0, o[1]['exp'], r, div,o[1]['px']])
 
         print(parms)
 
@@ -152,7 +158,7 @@ def generate_pnl_surface(ticker,opt_df,r,div,s,stds,strat_name= '',stockleg=None
 
     process_pool = mp.Pool(mp.cpu_count()-1)
     ggs = process_pool.starmap(greeks, parms)
-
+    print(opt_df,ggs)
     df_cols = ['spots', 'dte']
     if stockleg != None:
         print(stockleg)
@@ -162,7 +168,7 @@ def generate_pnl_surface(ticker,opt_df,r,div,s,stds,strat_name= '',stockleg=None
 
 
     df = pd.DataFrame(ggs)
-    # print(df)
+    print(df)
 
     df["pos"] = df["pos"].astype(int)
     l = [[strat_name, (df['pos'] * df['Avg px']).sum(), (df['pos'] * df['delta']).sum(),
@@ -199,69 +205,79 @@ def generate_pnl_surface(ticker,opt_df,r,div,s,stds,strat_name= '',stockleg=None
 
     plt.style.use('dark_background')
 
-    if threeD == True:
-        # re-create the 2D-arrays
-        x1 = np.linspace(pnl_df['spot'].min(), pnl_df['spot'].max(), len(pnl_df['spot'].unique()))
-        y1 = np.linspace(pnl_df['dte'].min(), pnl_df['dte'].max(), len(pnl_df['dte'].unique()))
-        x2, y2 = np.meshgrid(x1, y1)
-        z2 = griddata((pnl_df['spot'], pnl_df['dte']), pnl_df['pnl'], (x2, y2), method='cubic')
+    if stds[0] == True or stds[1] == True:
+        data = get_data(ticker, 'STK', 'SMART', 'USD', duration="252 D",
+                        enddate=datetime.today().strftime("%Y%m%d %H:%M:%S %Z"), barsize='1 day')
+        print(data['close'].pct_change().std(), max_dd)
+        st_dev = (data['close'].pct_change().std() * sqrt(max_dd))
+        print(st_dev)
 
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        # %matplotlib
+        return [pnl_df,df,strat_dt, st_dev]
 
-        surf = ax.plot_surface(x2, y2, z2, rstride=1, cstride=1, cmap=plt.cm.get_cmap('RdYlGn'), linewidth=0,
-                               antialiased=False, vmin=-max(abs(pnl_df['pnl'])), vmax=max(abs(pnl_df['pnl'])))
-        fig.colorbar(surf, shrink=0.5, aspect=5)
-
-        # surf = ax.plot_wireframe(x2, y2, z2, rstride=1, cstride=1)
-
-        # ax.zaxis.set_major_locator(LinearLocator(10))
-        # ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
-        ax.view_init(15, 70)
-        # plt.xlim(min(df['spots']),max(df['spots']))
-        ax.set_ylabel('DTE')
-        ax.set_xlabel('Spot')
-        ax.set_zlabel('P&L')
-        # ax.set_facecolor('xkcd:white')
-        ax.invert_xaxis()
-        tit = 'Payoff Surface'
-        if strat_name != None:
-            tit = tit + '\n' + strat_name
-
-        plt.title(tit)
-        fig.tight_layout()
-
-        # ~~~~ MODIFICATION TO EXAMPLE ENDS HERE ~~~~ #
-
-        plt.show()
     else:
+        return [pnl_df,df,strat_dt]
 
-        ax = Figure().add_subplot(111)
-
-        if stds[0] == True or stds[1] == True:
-            data = get_data(ticker, 'STK', 'SMART', 'USD', duration="30 D",
-                            enddate=datetime.today().strftime("%Y%m%d %H:%M:%S %Z"), barsize='1 day')
-            print(data['close'].pct_change().std(),max_dd)
-            st_dev = (data['close'].pct_change().std() * sqrt(252/max_dd))
-            print(st_dev)
-
-            if stds[0] == True:
-                plt.axvline(x=s+(s*st_dev),linestyle='--')
-                plt.axvline(x=s - (s*st_dev),linestyle='--')
-
-            if stds[1] == True:
-                plt.axvline(x=s + (s*(st_dev*2)), linestyle=':')
-                plt.axvline(x=s - (s*(st_dev*2)), linestyle=':')
-        plt.axvline(x=s, linestyle=':',color='y')
-        plt.hlines(y=0,xmin = s1,xmax=s2, color='r')
-
-
-        plt.plot(pnl_df['spot'], pnl_df['pnl'])
-        # plt.plot(pnl_df['spots'], dfs[0]['sum'])
-        plt.title('Payoff DTE = 1')
-        plt.show()
-
+    # if threeD == True:
+    #     # re-create the 2D-arrays
+    #     x1 = np.linspace(pnl_df['spot'].min(), pnl_df['spot'].max(), len(pnl_df['spot'].unique()))
+    #     y1 = np.linspace(pnl_df['dte'].min(), pnl_df['dte'].max(), len(pnl_df['dte'].unique()))
+    #     x2, y2 = np.meshgrid(x1, y1)
+    #     z2 = griddata((pnl_df['spot'], pnl_df['dte']), pnl_df['pnl'], (x2, y2), method='cubic')
+    #
+    #     fig = plt.figure()
+    #     ax = fig.add_subplot(111, projection='3d')
+    #     # %matplotlib
+    #
+    #     surf = ax.plot_surface(x2, y2, z2, rstride=1, cstride=1, cmap=plt.cm.get_cmap('RdYlGn'), linewidth=0,
+    #                            antialiased=False, vmin=-max(abs(pnl_df['pnl'])), vmax=max(abs(pnl_df['pnl'])))
+    #     fig.colorbar(surf, shrink=0.5, aspect=5)
+    #
+    #     # surf = ax.plot_wireframe(x2, y2, z2, rstride=1, cstride=1)
+    #
+    #     # ax.zaxis.set_major_locator(LinearLocator(10))
+    #     # ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+    #     ax.view_init(15, 70)
+    #     # plt.xlim(min(df['spots']),max(df['spots']))
+    #     ax.set_ylabel('DTE')
+    #     ax.set_xlabel('Spot')
+    #     ax.set_zlabel('P&L')
+    #     # ax.set_facecolor('xkcd:white')
+    #     ax.invert_xaxis()
+    #     tit = 'Payoff Surface'
+    #     if strat_name != None:
+    #         tit = tit + '\n' + strat_name
+    #
+    #     plt.title(tit)
+    #     fig.tight_layout()
+    #
+    #     # ~~~~ MODIFICATION TO EXAMPLE ENDS HERE ~~~~ #
+    #
+    #     plt.show()
+    # else:
+    #
+    #     ax = Figure().add_subplot(111)
+    #
+    #
+    #         #
+    #         # if stds[0] == True:
+    #         #     ax.axvline(x=s+(s*st_dev),linestyle='--')
+    #         #     ax.axvline(x=s - (s*st_dev),linestyle='--')
+    #         #
+    #         # if stds[1] == True:
+    #         #     ax.axvline(x=s + (s*(st_dev*2)), linestyle=':')
+    #         #     ax.axvline(x=s - (s*(st_dev*2)), linestyle=':')
+    #     ax.axvline(x=s, linestyle=':',color='y')
+    #     ax.hlines(y=0,xmin = s1,xmax=s2, color='r')
+    #
+    #
+    #     ax.plot(pnl_df['spot'], pnl_df['pnl'])
+    #     # plt.plot(pnl_df['spots'], dfs[0]['sum'])
+    #     # ax.title('Payoff DTE = 1')
+    #     # plt.show()
+    #
+    #
+    #
+    #
 
 
 

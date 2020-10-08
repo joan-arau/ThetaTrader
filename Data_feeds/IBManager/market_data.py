@@ -46,6 +46,8 @@ def main():
     app.reqMarketDataType(4)
     app.reqMktData(1, contract, "",False,False,[])
     app.run()
+    app.disconnect()
+    print('MD Disconnected')
 
 if __name__ == "__main__":
     main()

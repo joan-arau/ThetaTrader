@@ -280,13 +280,13 @@ class TestApp(TestWrapper, TestClient):
         thread.start()
 
         setattr(self, "_thread", thread)
-
+        # self.disconnect()
         self.init_error()
 
 
 #if __name__ == '__main__':
 def get_data(symbol,secType,exch,curr,duration,enddate,barsize=None):
-    app = TestApp("127.0.0.1", port, 10)
+    app = TestApp("127.0.0.1", port,20)
 
     ibcontract = Contract()
     ibcontract.symbol = symbol
@@ -300,20 +300,24 @@ def get_data(symbol,secType,exch,curr,duration,enddate,barsize=None):
 
 
     time.sleep(1)
+    print(app.isConnected())
     app.disconnect()
+    # app.waitOnUpdate(timeout=0.1)
+    print(app.isConnected())
+    print('HD Disconnected')
 
     df = pd.DataFrame(data=historic_data,columns=['date','open','high','low','close','volume'])
 
     return df
 
 
-# today = datetime.datetime.today().strftime("%Y%m%d %H:%M:%S %Z")  # endDateTime,
-#
+# today = datetime.today().strftime("%Y%m%d %H:%M:%S %Z")  # endDateTime,
+# #
 # data = get_data('SPY','STK','SMART','USD',duration ="1 D",enddate = datetime.today().strftime("%Y%m%d %H:%M:%S %Z"),barsize='1 day')
-#
-
+# # #
+# #
 # data = get_data("AAPL",'STK','SMART','USD',duration ="1 D",enddate = datetime.today().strftime("%Y%m%d %H:%M:%S %Z"),barsize='1 day')
-#
+# #
 # print(data)
 
 # print(df)

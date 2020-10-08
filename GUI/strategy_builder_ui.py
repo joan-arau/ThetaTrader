@@ -12,9 +12,20 @@ from Backend.strat_builder import generate_pnl_surface
 import csv
 import pandas as pd
 from GUI.SB_output import SB_output_GUI
+from Data_feeds.IBManager.acc_data import read_positions
+from configparser import ConfigParser
+
+config = ConfigParser()
+config.read('/Users/joan/PycharmProjects/ThetaTrader/config.ini')
+
+
+
+port = int(config.get('main', 'ibkr_port'))
+
+from ib_insync import IB
 
 tmp_file = '/Users/joan/PycharmProjects/ThetaTrader/db/temp.csv'
-
+from time import sleep
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -57,12 +68,20 @@ class MyApp1(QMainWindow, Ui_StrategyBuilder): #gui class
 
 
         # self.gridLayout.setSpacing(10)
-        self.gridLayout.setRowStretch(10, 4)
+        self.gridLayout.setRowStretch(10, 5)
 
         self.formatted_exp_list = None
 
         self.row_dic[0] = {'+': self.b_new_row, 'PC': self.pc_box, 'exp': self.comboBox_2,
-                           'strike': self.lineEdit, 'amt': self.lineEdit_2}
+                           'strike': self.lineEdit, 'amt': self.lineEdit_2,'px':self.lineEdit_5}
+
+        self.accs = 0
+
+        self.positions = read_positions()
+
+
+        self.fill_pos = None
+
 
 
 
@@ -76,7 +95,9 @@ class MyApp1(QMainWindow, Ui_StrategyBuilder): #gui class
         # self.spot = Ydata_feed.get_latest(self.ticker)
         # self.spot_in.setText(str(self.spot['close']))
         # if spot == None:
+        print(self.ticker)
         self.spot = data_feed.get_data(self.ticker,'STK','SMART','USD',duration ="1 D",enddate = datetime.today().strftime("%Y%m%d %H:%M:%S %Z"),barsize='1 day')
+        sleep(5)
         self.spot_in.setText(str(self.spot['close'][0]))
 
         self.div_in.setText(str(0))
@@ -86,8 +107,30 @@ class MyApp1(QMainWindow, Ui_StrategyBuilder): #gui class
         with open(tmp_file, newline='') as f:
             reader = csv.reader(f)
             self.exp_list = (datetime.strptime(i, "%Y%m%d") for i in list(reader)[0])
+
             self.formatted_exp_list = list((datetime.strftime(i, "%m-%d-%Y") for i in self.exp_list))
-            # print(list(self.formatted_exp_list))
+            print(list(self.formatted_exp_list),len(list(self.formatted_exp_list)))
+
+        d0 = datetime.today() #.strftime('%Y%m%d')
+
+        dds= []
+        x = 0
+        for iii in self.formatted_exp_list:
+            d1 = datetime.strptime(iii,'%m-%d-%Y')#.strftime('%Y%m%d')
+
+
+            delta = d1 - d0
+            dd = delta.days
+            dds.append(str(dd))
+
+            self.formatted_exp_list[x] = str(self.formatted_exp_list[x]) +" ["+str(dd)+"] "
+            x +=1
+
+
+
+        print(dds,len(dds))
+
+        print(self.formatted_exp_list)
 
 
         self.comboBox_2.addItems(self.formatted_exp_list)
@@ -96,7 +139,21 @@ class MyApp1(QMainWindow, Ui_StrategyBuilder): #gui class
             self.row_dic[row]['exp'].addItems(self.formatted_exp_list)
 
 
-    def new_row(self):
+
+
+        if self.fill_pos == None:
+            self.fill_pos = QPushButton('Fill Positions', self)
+            self.horizontalLayout.addWidget(self.fill_pos)
+            self.fill_pos.clicked.connect(self.fill_positions)
+
+        ib = IB().connect('127.0.0.1', port, clientId=20)
+        ib.disconnect()
+        ib.waitOnUpdate(timeout=0.1)
+        print('disconnected')
+        print(ib.isConnected())
+
+
+    def new_row(self,pc = '',exp='',strike = '',qty = '',px=''):
         # print('Clicked')
 
         self.new_row_btn = QPushButton('+', self)
@@ -113,6 +170,11 @@ class MyApp1(QMainWindow, Ui_StrategyBuilder): #gui class
         self.pc_box.setItemDelegate(self.delegate)
         self.gridLayout.addWidget(self.pc_box)
 
+        if pc == 'P':
+            self.pc_box.setCurrentText('Put')
+        elif pc == 'C':
+            self.pc_box.setCurrentText('Call')
+
 
         #exp box
         self.comboBox = QtWidgets.QComboBox(self.centralwidget)
@@ -121,10 +183,22 @@ class MyApp1(QMainWindow, Ui_StrategyBuilder): #gui class
             self.comboBox.addItems(self.formatted_exp_list)
         self.gridLayout.addWidget(self.comboBox)
 
+        if exp != '':
+            self.comboBox.setCurrentText(exp)
+
+
         self.lineEdit1 = QtWidgets.QLineEdit(self.centralwidget)
         self.gridLayout.addWidget(self.lineEdit1)
+        self.lineEdit1.setText(str(strike))
+
         self.lineEdit2 = QtWidgets.QLineEdit(self.centralwidget)
         self.gridLayout.addWidget(self.lineEdit2)
+        self.lineEdit2.setText(str(qty))
+
+
+        self.lineEdit3 = QtWidgets.QLineEdit(self.centralwidget)
+        self.gridLayout.addWidget(self.lineEdit3)
+        self.lineEdit3.setText(str(px))
 
 
 
@@ -144,7 +218,7 @@ class MyApp1(QMainWindow, Ui_StrategyBuilder): #gui class
 
         self.remove_row_btn.clicked.connect(lambda _, r=self.rows: self.remove_row(r))
 
-        self.row_dic[self.rows]={'+':self.new_row_btn,'PC':self.pc_box,'exp':self.comboBox,'strike':self.lineEdit1,'amt':self.lineEdit2,'-':self.remove_row_btn}
+        self.row_dic[self.rows]={'+':self.new_row_btn,'PC':self.pc_box,'exp':self.comboBox,'strike':self.lineEdit1,'amt':self.lineEdit2,'px':self.lineEdit3,'-':self.remove_row_btn}
 
 
         self.rows += 1
@@ -157,8 +231,8 @@ class MyApp1(QMainWindow, Ui_StrategyBuilder): #gui class
 
     def remove_row(self,r):
 
-        print(self.row_dic[r])
-        print('row: ', r)
+        # print(self.row_dic[r])
+        # print('row: ', r)
 
         for item in self.row_dic[r].values():
             item.setParent(None)
@@ -178,9 +252,13 @@ class MyApp1(QMainWindow, Ui_StrategyBuilder): #gui class
         for r in self.row_dic:
             dic = {}
             dic['pc'] = str(self.row_dic[r]['PC'].currentText())
-            dic['exp'] = datetime.strptime(str(self.row_dic[r]['exp'].currentText()),'%m-%d-%Y').strftime('%Y%m%d')
+            dic['exp'] = datetime.strptime(str(self.row_dic[r]['exp'].currentText().split(" ")[0]),'%m-%d-%Y').strftime('%Y%m%d')
             dic['strike'] = float(self.row_dic[r]['strike'].text())
-            dic['amt'] = int(self.row_dic[r]['amt'].text())
+            dic['amt'] = float(self.row_dic[r]['amt'].text())
+            if self.row_dic[r]['px'].text() != '':
+                dic['px'] = float(self.row_dic[r]['px'].text())/100
+            else:
+                dic['px'] = ''
 
             l.append(dic)
 
@@ -197,8 +275,52 @@ class MyApp1(QMainWindow, Ui_StrategyBuilder): #gui class
         # generate_pnl_surface(ticker=self.ticker,opt_df= opt_df,r= self.rf_rate,div= float(self.div_in.text()),s= self.spot['close'][0], strat_name=str(self.ticker+self.lineEdit_3.text()), stockleg=stockleg, pct=int(self.lineEdit_4.text())/100, threeD=self.checkBox.isChecked(),stds=stds)
         # print(self.ticker,opt_df,self.rf_rate,float(self.div_in.text()),self.spot['close'][0],str(self.ticker+self.lineEdit_3.text()), stockleg, int(self.lineEdit_4.text())/100, self.checkBox.isChecked(),stds)
 
-        SB_output_GUI([self.ticker,opt_df,self.rf_rate,float(self.div_in.text()),self.spot['close'][0],stds,str(self.ticker+self.lineEdit_3.text()), stockleg, int(self.lineEdit_4.text())/100, self.checkBox.isChecked()])
+        SB_output_GUI([self.ticker,opt_df,self.rf_rate,float(self.div_in.text()),self.spot['close'][0],stds,str(self.ticker+" "+self.lineEdit_3.text()), stockleg, int(self.lineEdit_4.text())/100, self.checkBox.isChecked()])
 
+    def fill_positions(self):
+        for i in reversed(list(self.row_dic.keys())):
+            self.remove_row(i)
+        positions = self.positions
+
+        # accounts = positions['Account'].unique()
+
+        positions = positions[positions['Symbol'].eq(self.ticker)]
+        accounts = positions['Account'].unique()
+
+        if self.accs ==0:
+            delegate = QtWidgets.QStyledItemDelegate()
+            self.accs = QtWidgets.QComboBox()
+            self.accs.setItemDelegate(delegate)
+
+
+            self.horizontalLayout.addWidget(self.accs)
+            self.accs.addItems(accounts)
+
+
+        positions = positions[positions['Account'].eq(self.accs.currentText())].drop_duplicates()
+
+        print(positions)
+
+        stks = positions[positions['Sec Type'].eq('STK')]
+        opts = positions[positions['Sec Type'].eq('OPT')]
+        d0 = datetime.today()
+        for i in opts.itertuples():
+            print(i)
+
+            d1 = datetime.strptime(i.exp, '%Y%m%d')
+
+            delta = d1 - d0
+            dd = delta.days
+
+
+            exp = datetime.strftime(d1,'%m-%d-%Y') + " [" + str(dd) + "] "
+
+
+            self.new_row(pc = i.right,strike = i.Strike,exp=exp,qty = str(i.Quantity),px = str(i.apx))
+
+        for i in stks.itertuples():
+            self.ticker_in_2.setText(str(i.Quantity))
+            self.ticker_in_3.setText(str(i.apx))
 
 
 # [[1, 'AAPL', 10.2, 'P', 503.43, 500.0, '20200825', '20200828', 0.0014000000000000002, '0'], [1, 'AAPL', 13.88, 'C', 503.43, 500.0, '20200825', '20200828', 0.0014000000000000002, '0']]
