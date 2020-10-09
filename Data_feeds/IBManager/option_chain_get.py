@@ -104,7 +104,7 @@ def get_individual(ticker,exp,strike,kind):
     ib.waitOnUpdate(timeout=0.1)
     print(ib.isConnected())
     print('ODG Disconnected')
-    time.sleep(1)
+    # time.sleep(1)
     return {'strike': strike, 'kind': kind, 'close': snapshot.close, 'last': snapshot.last, 'bid': snapshot.bid, 'ask': snapshot.ask, 'volume': snapshot.volume}
 
 
