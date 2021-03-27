@@ -7,13 +7,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-
+os.environ['QT_MAC_WANTS_LAYER'] = '1'
 from configparser import ConfigParser
 config = ConfigParser()
 conf_path = '/Users/joan/PycharmProjects/ThetaTrader/config.ini'
 config.read(conf_path)
 
 port = int(config.get('main', 'ibkr_port'))
+dark_mode = config.get('main', 'dark_mode')
 
 # path = os.path.dirname(__file__) #uic paths from itself, not the active dir, so path needed
 qtCreatorFile = "/Users/joan/PycharmProjects/ThetaTrader/GUI/settings_ui.ui" #Ui file name, from QtDesigner, assumes in same folder as this .py
@@ -31,7 +32,7 @@ class MyApp1(QMainWindow, Ui_Settings): #gui class
 
 
 
-        self.comboBox.addItems(['IBGW [4001]','TWS [7497]'])
+        self.comboBox.addItems(['IBGW [4001]','TWS [7496]'])
 
         print(port)
 
@@ -59,7 +60,7 @@ class MyApp1(QMainWindow, Ui_Settings): #gui class
         if self.comboBox.currentText() == 'IBGW [4001]':
             port = '4001'
         else:
-            port = '7497'
+            port = '7496'
 
 
         # port =self.port_in.text()

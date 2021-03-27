@@ -150,16 +150,15 @@ class TestApp(EClient, EWrapper):
         print("Error: ", reqId, "", errorCode, "", errorString)
 
     def position(self, account: str, contract: Contract, position: float, avgCost: float):
-        self.posns.append((account, contract.symbol, position, avgCost, contract.secType,contract.strike,contract.right,contract.lastTradeDateOrContractMonth))
+        self.posns.append((account, contract.symbol, position, avgCost, contract.secType,contract.strike,contract.right,contract.lastTradeDateOrContractMonth,contract.multiplier,contract.currency,contract.exchange,contract.conId,contract.primaryExchange,contract.secId,contract.secType))
         # print(contract.symbol, position)
 
     def positionEnd(self):
-        print(self.isConnected())
+
         self.disconnect()
         # self.waitOnUpdate(timeout=0.1)
-        print(self.isConnected())
-        print('ACD Disconnected')
-        self.df = pd.DataFrame(self.posns,columns = ['Account','Symbol', 'Quantity', 'apx', 'Sec Type','Strike','right','exp'])
+        print('ACD Connection = ',self.isConnected())
+        self.df = pd.DataFrame(self.posns,columns = ['Account','Symbol', 'Quantity', 'apx', 'Sec Type','Strike','right','exp','multiplier','currency','exchange','conId','primary_exchange','secId','secId_type'])
 
 
     def return_pos(self):
@@ -172,4 +171,13 @@ def read_positions():
     # app.disconnect()
     return app.return_pos()
 
-# print(read_positions())
+
+if __name__ == "__main__":
+    from datetime import datetime
+    t0 = datetime.now()
+
+
+    print(read_positions())
+    print(datetime.now() - t0)
+
+#

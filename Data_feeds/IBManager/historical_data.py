@@ -285,18 +285,33 @@ class TestApp(TestWrapper, TestClient):
 
 
 #if __name__ == '__main__':
-def get_data(symbol,secType,exch,curr,duration,enddate,barsize=None):
+def get_data(symbol=None,secType='STK',exch=None,curr=None,duration=None,enddate=None,barsize=None,conid = None):
     app = TestApp("127.0.0.1", port,20)
-
     ibcontract = Contract()
-    ibcontract.symbol = symbol
-    ibcontract.secType = secType
-    ibcontract.exchange = exch
-    ibcontract.currency = curr
 
-    resolved_ibcontract=app.resolve_ib_contract(ibcontract)
+    if conid == None:
 
-    historic_data = app.get_IB_historical_data(resolved_ibcontract,durationStr=duration,enddate=enddate,barSizeSetting=barsize)
+        ibcontract.symbol = symbol
+        ibcontract.secType = secType
+        ibcontract.exchange = exch
+        ibcontract.currency = curr
+
+
+        # resolved_ibcontract=app.resolve_ib_contract(ibcontract)
+        #
+        # historic_data = app.get_IB_historical_data(resolved_ibcontract,durationStr=duration,enddate=enddate,barSizeSetting=barsize)
+    elif exch == None:
+        ibcontract.conId = conid
+    else:
+        ibcontract.conId = conid
+        ibcontract.exchange = exch
+    resolved_ibcontract = app.resolve_ib_contract(ibcontract)
+    historic_data = app.get_IB_historical_data(resolved_ibcontract, durationStr=duration, enddate=enddate,barSizeSetting=barsize)
+
+
+
+
+
 
 
     time.sleep(1)
@@ -316,9 +331,15 @@ def get_data(symbol,secType,exch,curr,duration,enddate,barsize=None):
 # data = get_data('SPY','STK','SMART','USD',duration ="1 D",enddate = datetime.today().strftime("%Y%m%d %H:%M:%S %Z"),barsize='1 day')
 # # #
 # #
-# data = get_data("AAPL",'STK','SMART','USD',duration ="1 D",enddate = datetime.today().strftime("%Y%m%d %H:%M:%S %Z"),barsize='1 day')
+# data = get_data("EQIX",'STK','SMART','USD',duration ="1 D",enddate = datetime.today().strftime("%Y%m%d %H:%M:%S %Z"),barsize='1 day')
 # #
 # print(data)
+
+# data = get_data(conid=11054,exch ='TGATE',duration ="1 D",enddate = datetime.today().strftime("%Y%m%d %H:%M:%S %Z"),barsize='1 day')
+# # #
+# print(data)
+
+
 
 # print(df)
 #

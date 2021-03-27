@@ -62,7 +62,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Portfolio</string>
+     <string>Portfolio Manager</string>
     </property>
    </widget>
    <widget class="QPushButton" name="b2">

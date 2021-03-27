@@ -3,12 +3,13 @@ from GUI.error import MyApp1 as error
 from GUI.settings_ui import MyApp1 as settings
 from GUI.strategy_builder_ui import MyApp1 as SB
 from GUI.spread_analyzer_ui import MyApp1 as SA
+from GUI.portfolio_manager import MyApp1 as PM
 import sys
 import os
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5 import uic
 import qdarkstyle
-
+os.environ['QT_MAC_WANTS_LAYER'] = '1'
 # path = os.path.dirname(__file__) #uic paths from itself, not the active dir, so path needed
 qtCreatorFile = "/Users/joan/PycharmProjects/ThetaTrader/GUI/TTGUI.ui" #Ui file name, from QtDesigner, assumes in same folder as this .py
 
@@ -22,7 +23,7 @@ class MyApp(QMainWindow, Ui_ThetaTrader): #gui class
         self.setupUi(self)
         self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
         #set up callbacks
-        self.b0.clicked.connect(self.placeholder)
+        self.b0.clicked.connect(self.open_PM)
         self.b1.clicked.connect(self.open_SB)
         self.b2.clicked.connect(self.open_SA)
         self.b3.clicked.connect(self.placeholder)
@@ -47,6 +48,11 @@ class MyApp(QMainWindow, Ui_ThetaTrader): #gui class
 
     def open_SA(self):
         dialog = SA()
+        self.dialogs.append(dialog)
+        dialog.show()
+
+    def open_PM(self):
+        dialog = PM()
         self.dialogs.append(dialog)
         dialog.show()
 
