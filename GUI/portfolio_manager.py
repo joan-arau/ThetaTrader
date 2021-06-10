@@ -18,12 +18,15 @@ import py_vollib.black_scholes_merton.implied_volatility as BSM
 import quantsbin.derivativepricing as qbdp
 from GUI.portfolio_plot import MyApp1 as portfolio_plot
 from GUI.portfolio_stats import MyApp1 as portfolio_stats
+from GUI.portfolio_divs import MyApp1 as portfolio_divs
 os.environ['QT_MAC_WANTS_LAYER'] = '1'
 from configparser import ConfigParser
 config = ConfigParser()
 config.read('/Users/joan/PycharmProjects/ThetaTrader/config.ini')
 
-
+import sys
+sys.path.append('/Users/joan/PycharmProjects')
+from Stock_data_nas import get_data
 
 dark_mode = config.get('main', 'dark_mode')
 
@@ -107,6 +110,7 @@ class MyApp1(QMainWindow, Ui_pm): #gui class
         self.b_close.clicked.connect(self.close)
         self.b_plot.clicked.connect(self.portfolio_plt)
         self.b_stats.clicked.connect(self.portfolio_stats)
+        self.b_divs.clicked.connect(self.portfolio_divs)
 
         # self.get_position_details()
 
@@ -121,6 +125,11 @@ class MyApp1(QMainWindow, Ui_pm): #gui class
 
     def portfolio_stats(self):
         dialog = portfolio_stats()
+        self.dialogs.append(dialog)
+        dialog.show()
+
+    def portfolio_divs(self):
+        dialog = portfolio_divs()
         self.dialogs.append(dialog)
         dialog.show()
 

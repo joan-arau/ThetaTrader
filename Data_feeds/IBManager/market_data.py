@@ -3,7 +3,13 @@ from ibapi.wrapper import EWrapper
 from ibapi.contract import Contract
 from ibapi.ticktype import TickTypeEnum
 
+from configparser import ConfigParser
+config = ConfigParser()
+config.read('/Users/joan/PycharmProjects/ThetaTrader/config.ini')
 
+
+from datetime import datetime
+port = int(config.get('main', 'ibkr_port'))
 
 def create_contract(symbol, sec_type, exch, prim_exch, curr):
     """Create a Contract object defining what will
@@ -38,7 +44,7 @@ class TestApp(EWrapper,EClient):
 
 def main():
     app = TestApp()
-    app.connect('127.0.0.1',4001,0)
+    app.connect('127.0.0.1',port,150)
 
     contract = create_contract('AAPL', 'STK', 'SMART','NASDAQ', 'USD')
 

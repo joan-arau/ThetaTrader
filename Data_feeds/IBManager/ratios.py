@@ -1,6 +1,12 @@
 from ib.ext.Contract import Contract
 from ib.opt import ibConnection
+from configparser import ConfigParser
+config = ConfigParser()
+config.read('/Users/joan/PycharmProjects/ThetaTrader/config.ini')
 
+
+from datetime import datetime
+port = int(config.get('main', 'ibkr_port'))
 
 from time import sleep
 import pandas as pd
@@ -15,7 +21,7 @@ class Downloader(object):
     #field4price = ''
 
     def __init__(self):
-        self.tws = ibConnection('localhost', 4001,20)
+        self.tws = ibConnection('localhost', port,20)
         self.tws.register(self.tickPriceHandler, 'TickString')
         self.tws.connect()
         self._reqId = 1003 # current request id
@@ -36,7 +42,8 @@ class Downloader(object):
 
 
 def get_ratios(stocks,cols):
-
+    dl = Downloader()
+    c = Contract()
     #Create empty list to store data
     l = []
     # Loop over list of stocks
@@ -44,13 +51,12 @@ def get_ratios(stocks,cols):
     for x in stocks:
         idx += 1
         for _ in range(5):
-            dl = Downloader()
-            c = Contract()
+
             c.m_symbol = x
             c.m_secType = 'STK'
             c.m_exchange = 'SMART'
             c.m_currency = 'USD'
-            sleep(1)
+            # sleep(1)
             dl.requestData(c)
             sleep(1)
             m0 = str(x)
@@ -65,7 +71,7 @@ def get_ratios(stocks,cols):
                     row.append(m)
 
                     dl.cancelData()
-                    sleep(0.5)
+                    # sleep(0.5)
 
 
 
@@ -89,10 +95,10 @@ def get_ratios(stocks,cols):
 
 
             dl.cancelData()
-            sleep(0.5)
+            # sleep(0.5)
 
-
-    df = pd.DataFrame(l)[cols]
+    if cols != None:
+        df = pd.DataFrame(l)[cols]
     #print(df)
     return df
 
@@ -101,6 +107,6 @@ def get_ratios(stocks,cols):
 # df = get_ratios(['AAL','WYNN','SIX','MGM','MAR','HLT','WYND'],['Symbol','APENORM','AROAPCT','AROIPCT','BETA','DIVGRPCT','EPSTRENDGR','PR52WKPCT','PRICE2BK','QCURRATIO','QLTD2EQ','QPR2REV','QQUICKRATI','QTOTD2EQ','REVTRENDGR','TTMGROSMGN','TTMINTCOV','TTMNIPEREM','TTMOPMGN','TTMPAYRAT','YIELD','YLD5YAVG'])
 # print(df)
 
-# df = get_ratios(['AAPL'],['YIELD'])
+# df = float(get_ratios(['AAPL'],['YIELD']).iloc[0])
 #
 # print(df)

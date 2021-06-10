@@ -74,6 +74,21 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="b_divs">
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Dividends</string>
+       </property>
+       <property name="shortcut">
+        <string>Return</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="b_close">
        <property name="font">
         <font>

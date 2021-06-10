@@ -4,6 +4,7 @@ from PyQt5 import uic
 from PyQt5 import QtCore, QtGui, QtWidgets
 import qdarkstyle
 from datetime import datetime
+import Data_feeds.IBManager.ratios as ratios
 import Data_feeds.IBManager.historical_data as data_feed
 import Data_feeds.YFinance.yahoo_data as Ydata_feed
 import Data_feeds.quandl.quandl_data as Qdata_feed
@@ -12,7 +13,8 @@ from Backend.spread_analyzer import get_spreads
 import csv
 import pandas as pd
 from GUI.SB_output import SB_output_GUI
-
+import os
+os.environ['QT_MAC_WANTS_LAYER'] = '1'
 tmp_file = '/Users/joan/PycharmProjects/ThetaTrader/db/temp.csv'
 
 from PyQt5.QtGui import *
@@ -28,7 +30,9 @@ class MyApp1(QMainWindow, Ui_SpreadAnalyzer): #gui class
     def __init__(self):
         #The following sets up the gui via Qt
         super(MyApp1, self).__init__()
-
+        centralwidget = QtGui.QWidget(self)
+        self.grid = QtGui.QVBoxLayout(centralwidget)
+        self.setCentralWidget(centralwidget)
         self.rows = 1
         self.row_dic = {}
 
@@ -77,8 +81,12 @@ class MyApp1(QMainWindow, Ui_SpreadAnalyzer): #gui class
         self.spot = data_feed.get_data(self.ticker,'STK','SMART','USD',duration ="1 D",enddate = datetime.today().strftime("%Y%m%d %H:%M:%S %Z"),barsize='1 day')
         self.spot_in.setText(str(self.spot['close'][0]))
 
-        self.div_in.setText(str(0))
-        # self.div_in.setText(str(Ydata_feed.get_div_yield(ticker)))
+        # self.div_in.setText(str(0))
+        try:
+            self.div_in.setText(str(round(float(ratios.get_ratios([self.ticker],['YIELD']).iloc[0]),3)))
+        except:
+            self.div_in.setText(str(0))
+
 
         exps(self.ticker)
         with open(tmp_file, newline='') as f:
@@ -116,9 +124,10 @@ class MyApp1(QMainWindow, Ui_SpreadAnalyzer): #gui class
 
     def get_sp(self):
         print([self.ticker,float(self.spot_in.text()),float(self.div_in.text()),self.rf_rate,datetime.strptime(str(self.comboBox_2.currentText().split(" ")[0]),'%m-%d-%Y'),self.pc_box.currentText(),float(self.lineEdit_2.text()),float(self.lineEdit_3.text()),float(self.lineEdit.text())])
-        sp = get_spreads(self.ticker,float(self.spot_in.text()),float(self.div_in.text()),self.rf_rate,datetime.strptime(str(self.comboBox_2.currentText().split(" ")[0]),'%m-%d-%Y'),self.pc_box.currentText(),float(self.lineEdit_2.text()),float(self.lineEdit_3.text()),float(self.lineEdit.text()))
+        sp = get_spreads(self.ticker,float(self.spot_in.text()),float(self.div_in.text())/100,self.rf_rate/100,datetime.strptime(str(self.comboBox_2.currentText().split(" ")[0]),'%m-%d-%Y'),self.pc_box.currentText(),float(self.lineEdit_2.text()),float(self.lineEdit_3.text()),float(self.lineEdit.text()))
         print(sp)
         max_edge = sp.iloc[0]['edge_mid']
+        self.grid.setAlignment(QtCore.Qt.AlignCenter)
 
         for i in reversed(range(self.grid.count())):
             self.grid.itemAt(i).widget().setParent(None)

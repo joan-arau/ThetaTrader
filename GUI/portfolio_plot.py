@@ -14,10 +14,15 @@ from Data_feeds.quandl import quandl_data
 from datetime import datetime as dt
 from datetime import timedelta
 from configparser import ConfigParser
+
+import sys
+sys.path.append('/Users/joan/PycharmProjects')
+from Stock_data_nas import get_data
+
 config = ConfigParser()
 config.read('/Users/joan/PycharmProjects/ThetaTrader/config.ini')
 
-
+DB_PATH = config.get('main', 'path_to_db')
 
 dark_mode = config.get('main', 'dark_mode')
 
@@ -51,19 +56,21 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         delegate = QStyledItemDelegate()
         self.comboBox.setItemDelegate(delegate)
         self.comboBox.addItems(['All extended', 'Since 2020','YTD','Trailing Month','Trailing Week'])
-        self.comboBox.setCurrentIndex(0)
+        self.comboBox.setCurrentIndex(1)
 
 
-        self.df = pd.read_csv('/Users/joan/PycharmProjects/IBFLEX_Manager/db/final_data/IBKR:7530531_ext.csv')
+        self.df = pd.read_csv(DB_PATH+'/final_data/IBKR-7530531_ext.csv')
         self.df['date'] = pd.to_datetime(self.df['date'])
         self.bm_ex = True
         try:
 
-            self.bm = quandl_data.front_month_sp_futures(self.df['date'].iloc[0],self.df['date'].iloc[-1]).sort_values('Date')
+            # self.bm = quandl_data.front_month_sp_futures(self.df['date'].iloc[0],self.df['date'].iloc[-1]).sort_values('Date')
+            self.bm = get_data.get_data([{'symbol': 'SPY', 'from': pd.to_datetime(self.df['date'].iloc[0]),
+                                          'to': pd.to_datetime(self.df['date'].iloc[-1])}])[0]['SPY']
             # print(self.bm)
 
-            self.bm['Date']=pd.to_datetime(self.bm['Date'])
-            self.bm['pct_change'] = self.bm['Last'].pct_change()
+            self.bm['date']=pd.to_datetime(self.bm['date'])
+            self.bm['pct_change'] = self.bm['close'].pct_change()
             self.bm['cum_pct_change'] = (self.bm['pct_change'][1:] + 1).cumprod() - 1
             self.bm['cum_pct_change'].iloc[0] = 0
             self.df = pd.merge_asof(self.df, self.bm.rename(columns={'Date': 'date'}), on='date').dropna(subset=['date', 'cum_pct_change_x', 'cum_pct_change_y'])
@@ -81,8 +88,8 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         # print(df)
         # self.df = self.df.iloc[80:].reset_index(drop=True)
 
-        self.plt_df = self.df
-
+        # self.plt_df = self.df
+        self.refresh()
         self.create_plot()
 
 

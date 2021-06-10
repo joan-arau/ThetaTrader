@@ -61,7 +61,11 @@ def greeks(idx,ticker,target_value, flag, S, K,t0,t1, r, div,IV_only = False):
     except:
         return {'delta': None, 'gamma': None, 'theta': None, 'vega': None, 'rho': None, 'Contract': None, 'IV': None, 'DTE': None, 'index': None}
 
-def get_chain_w_greeks(ticker,exp_list = None,r = 0.01,div = None,spot = None):
+def get_chain_w_greeks(ticker,exp_list = None,r = None,div = None,spot = None):
+
+    if r == None:
+        r = 0.01
+
     if spot == None:
         spot = historical_data.get_data(ticker,'STK','SMART','USD',duration ="1 D",enddate = datetime.today().strftime("%Y%m%d %H:%M:%S %Z"),barsize='1 day')['close'][0]
         print(spot)
@@ -108,18 +112,21 @@ def get_chain_w_greeks(ticker,exp_list = None,r = 0.01,div = None,spot = None):
     greek_df=pd.DataFrame(var)
     print(greek_df)
     merge= df.merge(greek_df,on= 'index')
+    merge=merge.drop(columns=['index'])
     print(merge)
+    return merge
+
     # var = range(500)
 
-t1 = time.now()
+# t1 = time.now()
 # if __name__ == '__main__':
 
 
-get_chain_w_greeks('AAPL')
+# get_chain_w_greeks('AAPL',['20210521'])
 # print(greeks('AAPL', 30.299999999999997, 'C', 120.07, 90.0, '20210319', '20210416', 0.01, 0.6613436, False))
 
 # exp_list = ['20210416','20210430']
 # with multiprocessing.Pool(processes=3) as pool:
 #     var = pool.starmap(greeks, [('AAPL', 30.225, 'C', 120.02, 90.0, '20210319', '20210416', 0.01, 0.6613436, False), ('AAPL', 29.0, 'C', 120.02, 91.25, '20210319', '20210416', 0.01, 0.6613436, False)])
 # print(var)
-print('Time: '+str(time.now()-t1))
+# print('Time: '+str(time.now()-t1))
