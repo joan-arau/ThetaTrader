@@ -70,9 +70,9 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         self.df_div = pd.read_csv(DB_PATH+'/Dividends/IBKR-7530531.csv')
 
         self.df_div['payDate'] = pd.to_datetime(self.df_div['payDate'])
-
-
-
+        self.val_4.setText('$' + str(round(self.df_div['grossAmount'].sum() / ((dt.now() - self.df_div['payDate'][0]).days/30), 2)))
+        self.val_5.setText('$' + str(round(self.df_div['grossAmount'].sum()/(dt.now() - self.df_div['payDate'][0]).days, 2)))
+        print((dt.now() - self.df_div['payDate'][0]).days)
 
         # self.plt_df = self.df
         self.refresh()
@@ -236,6 +236,10 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
     def recalculate_df(self, start_date):
 
         df = self.df_div.loc[self.df_div['payDate'] > start_date].reset_index(drop=True)
+        print(df)
+        self.val_1.setText(str(len(df)))
+        self.val_2.setText('$'+str(round(df['grossAmount'].mean(),2)))
+        self.val_3.setText('$' + str(round(df['grossAmount'].sum(), 2)))
 
 
 
