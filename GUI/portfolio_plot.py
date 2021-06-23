@@ -66,7 +66,7 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
 
             # self.bm = quandl_data.front_month_sp_futures(self.df['date'].iloc[0],self.df['date'].iloc[-1]).sort_values('Date')
             self.bm = get_data.get_data([{'symbol': 'SPY', 'from': pd.to_datetime(self.df['date'].iloc[0]),
-                                          'to': pd.to_datetime(self.df['date'].iloc[-1])}])[0]['SPY']
+                                          'to': pd.to_datetime(self.df['date'].iloc[-1])}])
             # print(self.bm)
 
             self.bm['date']=pd.to_datetime(self.bm['date'])
@@ -103,24 +103,28 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         date_axis = pg.graphicsItems.DateAxisItem.DateAxisItem(orientation='bottom')
         self.graphWidget = pg.PlotWidget(axisItems = {'bottom': date_axis})
         self.verticalLayout.addWidget(self.graphWidget,0)
-        self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9, self.plt_df['cum_pct_change'] * 100)
+        self.graphWidget.addLegend()
+        self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9, self.plt_df['cum_pct_change'] * 100,name='Portfolio')
         self.graphWidget.showGrid(x=True,y=True)
         self.graphWidget.addLine(x=None, y=0, pen=pg.mkPen('r', width=3))
         self.graphWidget.sizeHint = lambda: pg.QtCore.QSize(100, 100)
 
+
         # bm_date = self.bm['Date'].reset_index(drop=True)
         # print(dates,bm_date)
         if self.bm_ex != False:
-            self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9,self.plt_df['cum_pct_change_bm']*100, pen=pg.mkPen('b', width=2))
+            self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9,self.plt_df['cum_pct_change_bm']*100, pen=pg.mkPen('b', width=2),name = 'SPY')
 
         # self.graphWidget.addLine(x=None, y=self.df['cum_pct_change'].iloc[-1]*100, pen=pg.mkPen('b', width=1))
+        print(self.plt_df.head())
 
 
     def refresh(self):
 
 
         if self.comboBox.currentText() == 'All extended':
-            self.plt_df = self.df
+            start_date = '01.01.2015'
+            self.plt_df = self.recalculate_df(start_date)
 
         if self.comboBox.currentText() == 'Since 2020':
             start_date = '01.01.2020'
@@ -146,7 +150,7 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
     def recalculate_df(self, start_date):
 
         df = self.df.loc[self.df['date'] > start_date].reset_index(drop=True)
-        print(df)
+        # print(df.head())
         df['cum_pct_change'] = (df['pct_change'][1:] + 1).cumprod() - 1
         df['cum_pct_change'].iloc[0] = 0
 
@@ -154,7 +158,7 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
             df['cum_pct_change_bm'] = (df['pct_change_bm'][1:] + 1).cumprod() - 1
             df['cum_pct_change_bm'].iloc[0] = 0
 
-        print(df)
+        print(df.head())
         return df
 
 

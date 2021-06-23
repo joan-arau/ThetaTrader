@@ -15,11 +15,12 @@ from datetime import datetime as dt
 from datetime import timedelta
 from configparser import ConfigParser
 from pyfinance import ols
+import matplotlib.pyplot as plt
 os.environ['QT_MAC_WANTS_LAYER'] = '1'
 config = ConfigParser()
 config.read('/Users/joan/PycharmProjects/ThetaTrader/config.ini')
 DB_PATH = config.get('main', 'path_to_db')
-
+from scipy import stats
 sys.path.append('/Users/joan/PycharmProjects')
 from Stock_data_nas import get_data
 
@@ -68,7 +69,7 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         self.df = pd.read_csv(DB_PATH+'/final_data/IBKR-7530531_ext.csv')
         print(self.df.tail())
         # self.bm = quandl_data.front_month_sp_futures(self.df['date'].iloc[0],self.df['date'].iloc[-1]).sort_values('Date')
-        self.bm = get_data.get_data([{'symbol':'SPY','from' : pd.to_datetime(self.df['date'].iloc[0]),'to':pd.to_datetime(self.df['date'].iloc[-1])}])[0]['SPY'] #.sort_values('date')
+        self.bm = get_data.get_data([{'symbol':'SPY','from' : pd.to_datetime(self.df['date'].iloc[0]),'to':pd.to_datetime(self.df['date'].iloc[-1])}]) #.sort_values('date')
         print(self.bm)
         self.df['date'] = pd.to_datetime(self.df['date'])
         self.bm['date']=pd.to_datetime(self.bm['date'])
@@ -89,6 +90,16 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
 
         self.df['rolling_std_x'] = self.df['pct_change_x'].rolling(window).std()
         self.df['rolling_std_y'] = self.df['pct_change_y'].rolling(window).std()
+
+
+
+
+
+
+
+
+
+
         # self.df = self.df.iloc[80:].reset_index(drop=True)
 
         # self.plt_df = self.df
@@ -101,7 +112,8 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
 
         for i in reversed(range(self.gridLayout.count())):
             self.gridLayout.itemAt(i).widget().setParent(None)
-
+        for i in reversed(range(self.gridLayout_right.count())):
+            self.gridLayout_right.itemAt(i).widget().setParent(None)
 
 
 
@@ -222,7 +234,7 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
 
 
         self.graphWidget = pg.PlotWidget()
-        self.gridLayout.addWidget(self.graphWidget)
+        self.gridLayout_right.addWidget(self.graphWidget)
         self.graphWidget.plot(x, y,stepMode=True, fillLevel=0, fillOutline=True, brush=pg.mkBrush('w'))
         self.graphWidget.plot(x1, -y1,stepMode=True, fillLevel=0, fillOutline=True, brush=(0, 0, 255, 150))
         self.graphWidget.setLabel('left', 'Histogram of Returns')
@@ -255,7 +267,37 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
 
 
 
+        # Theta/Delta
+        # print(self.plt_df)
 
+        plt_df = self.df_pos.groupby(['date'], as_index=False)['theta_pos','betaDelta'].sum()
+        plt_df =plt_df[(plt_df != 0).all(1)]
+        plt_df =plt_df[(np.abs(stats.zscore(plt_df[['theta_pos']])) < 3)]
+        plt_df = plt_df[(np.abs(stats.zscore(plt_df[['betaDelta']])) < 3)]
+
+        # plt.plot(plt_df['date'],plt_df['betaDelta'])
+        # plt.show()
+        print(plt_df)
+        dates = pd.to_datetime(plt_df['date'])
+        date_axis = pg.graphicsItems.DateAxisItem.DateAxisItem(orientation='bottom')
+        self.graphWidget = pg.PlotWidget(axisItems = {'bottom': date_axis})
+
+        self.gridLayout_right.addWidget(self.graphWidget)
+        self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9, plt_df['theta_pos'])
+        # self.graphWidget.setWindowTitle('Cash & Equivalents % of NAV')
+        self.graphWidget.setLabel('left', 'Portfolio Theta')
+        self.graphWidget.showGrid(x=True,y=True)
+        self.graphWidget.addLine(x=None, y=0, pen=pg.mkPen('r', width=3))
+        date_axis = pg.graphicsItems.DateAxisItem.DateAxisItem(orientation='bottom')
+        self.graphWidget = pg.PlotWidget(axisItems = {'bottom': date_axis})
+
+        self.gridLayout_right.addWidget(self.graphWidget)
+        self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9, plt_df['betaDelta'])
+        # self.graphWidget.setWindowTitle('Cash & Equivalents % of NAV')
+        self.graphWidget.setLabel('left', 'Portfolio Delta')
+        self.graphWidget.showGrid(x=True,y=True)
+
+        # self.graphWidget.sizeHint = lambda: pg.QtCore.QSize(100, 100)
 
         ## BeesPlot
         #
