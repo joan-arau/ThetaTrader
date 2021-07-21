@@ -85,15 +85,15 @@ def get_chain(ticker,exp_list = None):
             # print(contract)
             snapshot = ib.reqMktData(contract, "", True, False)
 
-            l.append([x.strike,x.right,snapshot])
+            l.append([x.strike,x.right,snapshot,x.conId])
             # print(snapshot)
 
         while util.isNan(snapshot.bid):
             ib.sleep()
         for ii in l:
             # print(ii)
-            df = df.append({'strike':float(ii[0]),'kind':ii[1],'close':ii[2].close,'last':ii[2].last,'bid':ii[2].bid,'ask':ii[2].ask,'mid':(ii[2].bid+ii[2].ask)/2,'volume':ii[2].volume},ignore_index=True)
-            exps[i] = df
+            df = df.append({'strike':float(ii[0]),'kind':ii[1],'close':ii[2].close,'last':ii[2].last,'bid':ii[2].bid,'ask':ii[2].ask,'mid':(ii[2].bid+ii[2].ask)/2,'volume':ii[2].volume,'conid':int(ii[3])},ignore_index=True)
+        exps[i] = df
     ib.disconnect()
     return exps
 
@@ -182,8 +182,9 @@ def get_individual(ticker = None,exp = None,strike = None,kind = None,conId = No
 # print(datetime.now()-t0)
 
 #
-# t0 = datetime.now()
-# print(get_chain('AAPL'))
-# print(datetime.now()-t0)
 
-# print(datetime.now()-t0)
+if __name__ == '__main__':
+    t0 = datetime.now()
+    print(get_chain('AAPL',['20210917']))
+    print(datetime.now()-t0)
+

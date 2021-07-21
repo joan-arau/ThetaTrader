@@ -19,6 +19,7 @@ import quantsbin.derivativepricing as qbdp
 from GUI.portfolio_plot import MyApp1 as portfolio_plot
 from GUI.portfolio_stats import MyApp1 as portfolio_stats
 from GUI.portfolio_divs import MyApp1 as portfolio_divs
+from GUI.portfolio_fees import MyApp1 as portfolio_fees
 os.environ['QT_MAC_WANTS_LAYER'] = '1'
 from configparser import ConfigParser
 config = ConfigParser()
@@ -112,6 +113,8 @@ class MyApp1(QMainWindow, Ui_pm): #gui class
         self.b_stats.clicked.connect(self.portfolio_stats)
         self.b_divs.clicked.connect(self.portfolio_divs)
 
+        self.b_fees.clicked.connect(self.portfolio_fees)
+
         # self.get_position_details()
 
         print(dark_mode)
@@ -130,6 +133,10 @@ class MyApp1(QMainWindow, Ui_pm): #gui class
 
     def portfolio_divs(self):
         dialog = portfolio_divs()
+        self.dialogs.append(dialog)
+        dialog.show()
+    def portfolio_fees(self):
+        dialog = portfolio_fees()
         self.dialogs.append(dialog)
         dialog.show()
 

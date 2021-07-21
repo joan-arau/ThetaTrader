@@ -1,19 +1,30 @@
 
+from configparser import ConfigParser
 
+config = ConfigParser()
+config.read('/Users/joan/PycharmProjects/ThetaTrader/config.ini')
+import sys,os
+sys.path.append('/Users/joan/PycharmProjects')
 
-
+from Stock_data_nas import get_data
 
 from Data_feeds.IBManager import option_chain_get
 from Data_feeds.IBManager import ratios
-from Data_feeds.IBManager import historical_data
 
+
+
+
+
+
+from ib_insync import *
 import pandas as pd
 
 import py_vollib.black_scholes_merton.implied_volatility as BSM
 import quantsbin.derivativepricing as qbdp
 import mibian
 
-from datetime import datetime
+from datetime import datetime,timedelta
+
 
 from multiprocessing import Pool
 import multiprocessing
@@ -61,13 +72,17 @@ def greeks(idx,ticker,target_value, flag, S, K,t0,t1, r, div,IV_only = False):
     except:
         return {'delta': None, 'gamma': None, 'theta': None, 'vega': None, 'rho': None, 'Contract': None, 'IV': None, 'DTE': None, 'index': None}
 
-def get_chain_w_greeks(ticker,exp_list = None,r = None,div = None,spot = None):
+def get_chain_w_greeks(ticker,exp_list = None,r = None,div = None,spot = None,ib = None):
 
     if r == None:
         r = 0.01
 
     if spot == None:
-        spot = historical_data.get_data(ticker,'STK','SMART','USD',duration ="1 D",enddate = datetime.today().strftime("%Y%m%d %H:%M:%S %Z"),barsize='1 day')['close'][0]
+        print(ticker)
+        spot = get_data.get_data([{'symbol':'AAPL','from':(datetime.today()-timedelta(1)),'to': datetime.today()}],ib=ib)['close'].iloc[-1]
+
+
+
         print(spot)
 
     if div == None:
@@ -108,7 +123,7 @@ def get_chain_w_greeks(ticker,exp_list = None,r = None,div = None,spot = None):
 
     with multiprocessing.Pool() as pool:
         var = pool.starmap(greeks, input_list)
-    print(var)
+    # print(var)
     greek_df=pd.DataFrame(var)
     print(greek_df)
     merge= df.merge(greek_df,on= 'index')
@@ -119,11 +134,17 @@ def get_chain_w_greeks(ticker,exp_list = None,r = None,div = None,spot = None):
     # var = range(500)
 
 # t1 = time.now()
-# if __name__ == '__main__':
+if __name__ == '__main__':
+    port = int(config.get('main', 'ibkr_port'))
+    ib = IB()
+    import random
 
+    ib.connect('127.0.0.1', port, clientId=random.randint(0, 9999))
 
-# get_chain_w_greeks('AAPL',['20210521'])
-# print(greeks('AAPL', 30.299999999999997, 'C', 120.07, 90.0, '20210319', '20210416', 0.01, 0.6613436, False))
+    print(get_chain_w_greeks('AAPL',['20210917'],ib=ib))
+
+    ib.disconnect()
+    # print(greeks('AAPL', 30.299999999999997, 'C', 120.07, 90.0, '20210319', '20210416', 0.01, 0.6613436, False))
 
 # exp_list = ['20210416','20210430']
 # with multiprocessing.Pool(processes=3) as pool:

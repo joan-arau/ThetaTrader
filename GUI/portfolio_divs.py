@@ -70,8 +70,11 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         self.df_div = pd.read_csv(DB_PATH+'/Dividends/IBKR-7530531.csv')
 
         self.df_div['payDate'] = pd.to_datetime(self.df_div['payDate'])
-        self.val_4.setText('$' + str(round(self.df_div['grossAmount'].sum() / ((dt.now() - self.df_div['payDate'][0]).days/30), 2)))
-        self.val_5.setText('$' + str(round(self.df_div['grossAmount'].sum()/(dt.now() - self.df_div['payDate'][0]).days, 2)))
+        print(self.df_div)
+        self.val_4.setText('$' + str(round(self.df_div['amount_base'].sum() / ((dt.now() - self.df_div['payDate'][0]).days/30), 2)))
+        self.val_5.setText(
+            '$' + str(round(self.df_div['amount_base'].sum() / ((dt.now() - self.df_div['payDate'][0]).days / 7), 2)))
+        self.val_6.setText('$' + str(round(self.df_div['amount_base'].sum()/(dt.now() - self.df_div['payDate'][0]).days, 2)))
         print((dt.now() - self.df_div['payDate'][0]).days)
 
         # self.plt_df = self.df
@@ -85,15 +88,17 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         for i in reversed(range(self.gridLayout.count())):
             self.gridLayout.itemAt(i).widget().setParent(None)
         print(self.plt_df)
-        self.plt_df_1 = self.plt_df.groupby('payDate', as_index=False)['grossAmount'].sum()
+        self.plt_df_1 = self.plt_df.groupby('payDate', as_index=False)['amount_base'].sum()
 
-        self.plt_df_1['expanding']= self.plt_df_1['grossAmount'].expanding(1).sum()
+        self.plt_df_1['expanding']= self.plt_df_1['amount_base'].expanding(1).sum()
         # self.plt_df_1 = self.plt_df_1.dropna(inplace=True)
         print(self.plt_df_1)
 
-        self.plt_df_2 = self.plt_df.groupby('symbol', as_index=False)['grossAmount'].sum().sort_values('grossAmount').tail(50)
+        self.plt_df_2 = self.plt_df.groupby('symbol', as_index=False)['amount_base'].sum().sort_values('amount_base')
         print(self.plt_df_2)
-
+        self.up = self.plt_df_2.loc[self.plt_df_2['amount_base']>0].tail(50)
+        self.down = self.plt_df_2.loc[self.plt_df_2['amount_base'] < 0].tail(50)
+        print(self.down)
 
         dates = pd.to_datetime(self.plt_df_1['payDate'])
         #
@@ -128,9 +133,13 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         self.ax1 = self.fig.add_subplot(111)
         self.ax1.grid(zorder=1,alpha=0.1)
         self.ax1.grid(zorder=1,axis='y', alpha=0.5)
-        self.ax1.bar( x=self.plt_df_2['symbol'], height=self.plt_df_2['grossAmount'], align='edge', width=0.8,color ='lime' ,zorder = 3)
+        self.ax1.bar(x=self.down['symbol'], height=self.down['amount_base'], align='edge', width=0.8,
+                     color='r', zorder=3)
+        self.ax1.bar( x=self.up['symbol'], height=self.up['amount_base'], align='edge', width=0.8,color ='lime' ,zorder = 3)
+
         for tick in self.ax1.get_xticklabels():
             tick.set_rotation(90)
+            tick.set_ha("left")
 
         self.axes = self.ax1
         # self.fig.tight_layout()
@@ -142,8 +151,33 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         self.canvas.updateGeometry()
         self.fig.tight_layout()
         self.gridLayout.addWidget(self.canvas)
+        #
 
 
+
+        # self.plt_df.index = self.plt_df['payDate']
+        # print(self.plt_df)
+        # self.plt_df_3 = self.plt_df.groupby(pd.Grouper(freq='M'))['grossAmount'].sum()
+        # print(self.plt_df_3)
+        # self.fig = Figure()
+        # self.ax1 = self.fig.add_subplot(111)
+        # self.ax1.grid(zorder=1,alpha=0.1)
+        # self.ax1.grid(zorder=1,axis='y', alpha=0.5)
+        # self.ax1.bar( x=self.plt_df_3.index, height=self.plt_df_3, align='edge',color ='lime' ,zorder = 3)
+        # for tick in self.ax1.get_xticklabels():
+        #     tick.set_rotation(90)
+        #     tick.set_ha("left")
+        #
+        # self.axes = self.ax1
+        # # self.fig.tight_layout()
+        #
+        # self.canvas = FigureCanvas(self.fig)
+        #
+        # self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,
+        #                           QtGui.QSizePolicy.Expanding)
+        # self.canvas.updateGeometry()
+        # self.fig.tight_layout()
+        # self.gridLayout.addWidget(self.canvas)
 
         #
         #
@@ -238,8 +272,8 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         df = self.df_div.loc[self.df_div['payDate'] > start_date].reset_index(drop=True)
         print(df)
         self.val_1.setText(str(len(df)))
-        self.val_2.setText('$'+str(round(df['grossAmount'].mean(),2)))
-        self.val_3.setText('$' + str(round(df['grossAmount'].sum(), 2)))
+        self.val_2.setText('$'+str(round(df['amount_base'].mean(),2)))
+        self.val_3.setText('$' + str(round(df['amount_base'].sum(), 2)))
 
 
 

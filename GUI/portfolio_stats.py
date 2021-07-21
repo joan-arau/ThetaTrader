@@ -15,6 +15,7 @@ from datetime import datetime as dt
 from datetime import timedelta
 from configparser import ConfigParser
 from pyfinance import ols
+import quantstats as qs
 import matplotlib.pyplot as plt
 os.environ['QT_MAC_WANTS_LAYER'] = '1'
 config = ConfigParser()
@@ -23,8 +24,8 @@ DB_PATH = config.get('main', 'path_to_db')
 from scipy import stats
 sys.path.append('/Users/joan/PycharmProjects')
 from Stock_data_nas import get_data
-
-
+from GUI.stats import MyApp1 as stat_win
+from ib_insync import *
 dark_mode = config.get('main', 'dark_mode')
 cash_equivs = config.get('main', 'cash_equivs').split(',')
 
@@ -44,6 +45,12 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         #The following sets up the gui via Qt
         super(MyApp1, self).__init__()
 
+        port = int(config.get('main', 'ibkr_port'))
+        ib = IB()
+        import random
+        ib.connect('127.0.0.1', port, clientId=random.randint(0, 9999))
+
+        self.dialogs = list()
         self.setupUi(self)
         if dark_mode == 'True':
             self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
@@ -55,6 +62,7 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         # self.ui.label.setStyleSheet("QLabel {background-color: red;}")
         self.b_close.clicked.connect(self.close)
         self.refresh_b.clicked.connect(self.refresh)
+        self.stats_btn.clicked.connect(self.stat_win)
 
 
         delegate = QStyledItemDelegate()
@@ -69,10 +77,11 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         self.df = pd.read_csv(DB_PATH+'/final_data/IBKR-7530531_ext.csv')
         print(self.df.tail())
         # self.bm = quandl_data.front_month_sp_futures(self.df['date'].iloc[0],self.df['date'].iloc[-1]).sort_values('Date')
-        self.bm = get_data.get_data([{'symbol':'SPY','from' : pd.to_datetime(self.df['date'].iloc[0]),'to':pd.to_datetime(self.df['date'].iloc[-1])}]) #.sort_values('date')
+        self.bm = get_data.get_data([{'symbol':'SPY','from' : pd.to_datetime(self.df['date'].iloc[0]),'to':pd.to_datetime(self.df['date'].iloc[-1])}],ib=ib) #.sort_values('date')
         print(self.bm)
         self.df['date'] = pd.to_datetime(self.df['date'])
         self.bm['date']=pd.to_datetime(self.bm['date'])
+        print(self.bm)
         self.bm['pct_change'] = self.bm['close'].pct_change()
         self.bm['cum_pct_change'] = (self.bm['pct_change'][1:] + 1).cumprod() - 1
         self.bm['cum_pct_change'].iloc[0] = 0
@@ -104,9 +113,17 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
 
         # self.plt_df = self.df
         self.refresh()
+
+
+
+
+
         # self.create_plots()
 
-
+    def stat_win(self):
+        dialog = stat_win(self.stats)
+        self.dialogs.append(dialog)
+        dialog.show()
 
     def create_plots(self):
 
@@ -142,7 +159,7 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         date_axis = pg.graphicsItems.DateAxisItem.DateAxisItem(orientation='bottom')
         self.graphWidget = pg.PlotWidget(axisItems = {'bottom': date_axis})
         self.gridLayout.addWidget(self.graphWidget)
-        self.graphWidget.addLegend(offset=(1,-1))
+        self.graphWidget.addLegend(offset=(1,1))
         self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9, self.plt_df['total_value'], fillLevel=0, fillBrush=(1,10),pen = (1,10),name = 'Total Value')
         self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9, self.plt_df['cash_eq'], fillLevel=0,
                               fillBrush=(pg.mkBrush('r')),pen=pg.mkPen('r'),name = 'Cash Eq')
@@ -197,10 +214,10 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         dates = pd.to_datetime(self.plt_df['date'])
         date_axis = pg.graphicsItems.DateAxisItem.DateAxisItem(orientation='bottom')
         self.graphWidget = pg.PlotWidget(axisItems = {'bottom': date_axis})
-
+        self.graphWidget.addLegend(offset=(1, 1))
         self.gridLayout.addWidget(self.graphWidget)
-        self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9, self.plt_df['rolling_std_x']*100)
-        self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9, self.plt_df['rolling_std_y']*100,pen=pg.mkPen('b'))
+        self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9, self.plt_df['rolling_std_x']*100,name='Portfolio')
+        self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9, self.plt_df['rolling_std_y']*100,pen=pg.mkPen('b'),name='Benchmark')
         # self.graphWidget.setWindowTitle('Cash & Equivalents % of NAV')
         self.graphWidget.setLabel('left', 'Rolling Std')
         self.graphWidget.showGrid(x=True,y=True)
@@ -208,8 +225,17 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         # self.graphWidget.sizeHint = lambda: pg.QtCore.QSize(100, 100)
 
 
-
-
+        # Drawdown
+        dates = pd.to_datetime(self.dd_pf['date'])
+        date_axis = pg.graphicsItems.DateAxisItem.DateAxisItem(orientation='bottom')
+        self.graphWidget = pg.PlotWidget(axisItems = {'bottom': date_axis})
+        self.graphWidget.addLegend(offset=(1, -1))
+        self.gridLayout_right.addWidget(self.graphWidget)
+        self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9, self.dd_pf['pct_change_x']*100,name='Portfolio')
+        self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9, self.dd_bm['pct_change_y']*100,pen=pg.mkPen('b'),name='Benchmark')
+        # self.graphWidget.setWindowTitle('Cash & Equivalents % of NAV')
+        self.graphWidget.setLabel('left', 'Drawdown')
+        self.graphWidget.showGrid(x=True,y=True)
 
 
 
@@ -342,8 +368,9 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         if self.comboBox.currentText() == 'Trailing Week':
             start_date =  dt.today() - timedelta(days=7)
             self.plt_df = self.recalculate_df(start_date)
-
+        self.recalculate_stats()
         self.create_plots()
+
 
 
 
@@ -351,23 +378,58 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
     def recalculate_df(self, start_date):
 
         df = self.df.loc[self.df['date'] > start_date].reset_index(drop=True)
-        print(df)
+        # print(df)
         df['cum_pct_change_x'] = (df['pct_change_x'][1:] + 1).cumprod() - 1
         df['cum_pct_change_x'].iloc[0] = 0
 
         df['cum_pct_change_y'] = (df['pct_change_y'][1:] + 1).cumprod() - 1
         df['cum_pct_change_y'].iloc[0] = 0
 
-        print(df)
-
-
-
-
-
-
+        # print(df)
 
 
         return df
+
+    def recalculate_stats(self):
+        self.stats = {}
+        # print(self.plt_df)
+        pf = self.plt_df['pct_change_x']
+        bm = self.plt_df['pct_change_y']
+        print(pf)
+        _ = qs.stats.greeks(pf,bm)
+        self.stats['alpha']= _['alpha']
+        self.stats['beta'] = _['beta']
+        self.stats['best_pf'] = qs.stats.best(pf)
+        self.stats['best_bm'] = qs.stats.best(bm)
+        self.stats['worst_pf'] = qs.stats.worst(pf)
+        self.stats['worst_bm'] = qs.stats.worst(bm)
+        self.stats['sharpe_pf'] = qs.stats.sharpe(pf)
+        self.stats['sharpe_bm'] = qs.stats.sharpe(bm)
+        self.stats['sortino_pf'] = qs.stats.sortino(pf)
+        self.stats['sortino_bm'] = qs.stats.sortino(bm)
+        self.stats['skew_pf'] = qs.stats.skew(pf)
+        self.stats['skew_bm'] = qs.stats.skew(bm)
+        self.stats['kurtosis_pf'] = qs.stats.kurtosis(pf)
+        self.stats['kurtosis_bm'] = qs.stats.kurtosis(bm)
+        self.stats['max_dd_pf'] = qs.stats.max_drawdown(pf)
+        self.stats['max_dd_bm'] = qs.stats.max_drawdown(bm)
+        self.stats['cagr_pf'] = qs.stats.cagr(self.plt_df[['date','pct_change_x']].set_index('date'))['pct_change_x']
+        self.stats['cagr_bm'] = qs.stats.cagr(self.plt_df[['date','pct_change_y']].set_index('date'))['pct_change_y']
+        self.stats['comp_pf'] = qs.stats.comp(pf)
+        self.stats['comp_bm'] = qs.stats.comp(bm)
+        self.stats['vol_pf'] = qs.stats.volatility(pf)
+        self.stats['vol_bm'] = qs.stats.volatility(bm)
+        self.stats['con_wins_pf'] = qs.stats.consecutive_wins(pf)
+        self.stats['con_wins_bm'] = qs.stats.consecutive_wins(bm)
+        self.stats['con_losses_pf'] = qs.stats.consecutive_losses(pf)
+        self.stats['con_losses_bm'] = qs.stats.consecutive_losses(bm)
+        self.dd_pf = qs.stats.to_drawdown_series(self.plt_df[['date','pct_change_x']].set_index('date')).reset_index()
+        self.dd_bm = qs.stats.to_drawdown_series(self.plt_df[['date','pct_change_y']].set_index('date')).reset_index()
+        print(self.stats)
+        print(self.dd_pf)
+        print(self.dd_bm)
+
+
 
 
 

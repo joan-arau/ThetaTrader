@@ -62,21 +62,84 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>930</y>
+      <y>950</y>
       <width>1011</width>
-      <height>221</height>
+      <height>234</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout_2">
-     <item row="3" column="1">
-      <widget class="QLabel" name="key_2">
+     <item row="7" column="5">
+      <widget class="QLabel" name="label_6">
        <property name="text">
-        <string>Avg Dividend Amount:</string>
+        <string>TextLabel</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="2">
-      <widget class="QLabel" name="val_2">
+     <item row="7" column="4">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Total Fees:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLabel" name="val_1">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="7">
+      <widget class="Line" name="line_4">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="4">
+      <widget class="QLabel" name="key_5">
+       <property name="text">
+        <string>Total Commission:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="4" colspan="2">
+      <widget class="Line" name="line_6">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="4" colspan="2">
+      <widget class="Line" name="line_8">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="5">
+      <widget class="QLabel" name="val_5">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="5">
+      <widget class="QLabel" name="val_4">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLabel" name="key_1">
+       <property name="text">
+        <string># Of Dividends Received:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="5">
+      <widget class="QLabel" name="val_6">
        <property name="text">
         <string>TextLabel</string>
        </property>
@@ -89,87 +152,24 @@
        </property>
       </widget>
      </item>
-     <item row="5" column="5">
-      <widget class="QLabel" name="val_6">
+     <item row="3" column="2">
+      <widget class="QLabel" name="val_2">
        <property name="text">
         <string>TextLabel</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="0" rowspan="5">
-      <widget class="Line" name="line_2">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLabel" name="key_1">
+     <item row="3" column="1">
+      <widget class="QLabel" name="key_2">
        <property name="text">
-        <string># Of Dividends Received:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="5">
-      <widget class="QLabel" name="val_4">
-       <property name="text">
-        <string>TextLabel</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="5">
-      <widget class="QLabel" name="val_5">
-       <property name="text">
-        <string>TextLabel</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="4" colspan="2">
-      <widget class="Line" name="line_8">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="3" rowspan="5">
-      <widget class="Line" name="line">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="4" colspan="2">
-      <widget class="Line" name="line_6">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="4">
-      <widget class="QLabel" name="key_5">
-       <property name="text">
-        <string>Avg Weekly Dividend:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0" colspan="7">
-      <widget class="Line" name="line_4">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="2">
-      <widget class="QLabel" name="val_1">
-       <property name="text">
-        <string>TextLabel</string>
+        <string>Avg Dividend Amount:</string>
        </property>
       </widget>
      </item>
      <item row="5" column="4">
       <widget class="QLabel" name="key_6">
        <property name="text">
-        <string>Avg Daily Dividend:</string>
+        <string>Total SLB Fees:</string>
        </property>
       </widget>
      </item>
@@ -183,18 +183,11 @@
      <item row="1" column="4">
       <widget class="QLabel" name="key_4">
        <property name="text">
-        <string>Avg Monthly Dividend:</string>
+        <string>Total Data,Research,Broker Interest:</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="6" rowspan="5">
-      <widget class="Line" name="line_10">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="0" colspan="7">
+     <item row="9" column="0" colspan="7">
       <widget class="Line" name="line_9">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -212,6 +205,55 @@
       <widget class="QLabel" name="key_3">
        <property name="text">
         <string>Sum Of Dividends:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1" colspan="2">
+      <widget class="Line" name="line_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="4" colspan="2">
+      <widget class="Line" name="line_11">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="2">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" rowspan="7">
+      <widget class="Line" name="line_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3" rowspan="7">
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="6" rowspan="7">
+      <widget class="Line" name="line_10">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
        </property>
       </widget>
      </item>

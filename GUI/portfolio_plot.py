@@ -1,5 +1,4 @@
-import sys
-import os
+
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5 import uic
 import qdarkstyle
@@ -14,13 +13,21 @@ from Data_feeds.quandl import quandl_data
 from datetime import datetime as dt
 from datetime import timedelta
 from configparser import ConfigParser
-
-import sys
+from ib_insync import *
+import sys,os
+os.environ['QT_MAC_WANTS_LAYER'] = '1'
 sys.path.append('/Users/joan/PycharmProjects')
 from Stock_data_nas import get_data
 
+
+
 config = ConfigParser()
 config.read('/Users/joan/PycharmProjects/ThetaTrader/config.ini')
+
+
+
+
+
 
 DB_PATH = config.get('main', 'path_to_db')
 
@@ -39,6 +46,12 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
     def __init__(self):
         #The following sets up the gui via Qt
         super(MyApp1, self).__init__()
+
+        port = int(config.get('main', 'ibkr_port'))
+        ib = IB()
+        import random
+        ib.connect('127.0.0.1', port, clientId=random.randint(0, 9999))
+
 
         self.setupUi(self)
         if dark_mode == 'True':
@@ -66,7 +79,7 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
 
             # self.bm = quandl_data.front_month_sp_futures(self.df['date'].iloc[0],self.df['date'].iloc[-1]).sort_values('Date')
             self.bm = get_data.get_data([{'symbol': 'SPY', 'from': pd.to_datetime(self.df['date'].iloc[0]),
-                                          'to': pd.to_datetime(self.df['date'].iloc[-1])}])
+                                          'to': pd.to_datetime(self.df['date'].iloc[-1])}],ib=ib)
             # print(self.bm)
 
             self.bm['date']=pd.to_datetime(self.bm['date'])
@@ -116,7 +129,7 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
             self.graphWidget.plot(dates.values.astype(np.int64) // 10 ** 9,self.plt_df['cum_pct_change_bm']*100, pen=pg.mkPen('b', width=2),name = 'SPY')
 
         # self.graphWidget.addLine(x=None, y=self.df['cum_pct_change'].iloc[-1]*100, pen=pg.mkPen('b', width=1))
-        print(self.plt_df.head())
+        print(self.plt_df.tail())
 
 
     def refresh(self):

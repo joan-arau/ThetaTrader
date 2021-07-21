@@ -89,8 +89,8 @@ def calc_put_spreads(ch,spot,div,r,t0,exp,kind,min_otm,min_pop,max_point_spread,
     ch = ch[ch['kind'].str.contains(kind)].sort_values(['strike'],inplace=False).reset_index(drop = True)
 
     ch = ch[~(ch['strike'] >= int(spot))]
-    # with pd.option_context('display.max_rows', 10, 'display.max_columns', None):
-        # print(ch)
+    with pd.option_context('display.max_rows', 10, 'display.max_columns', None):
+        print(ch)
     atm_put_IV = ch['IV'].iloc[-1]
     # atm_put_IV = greeks(ch['mid'].iloc[-1],kind,spot,ch['strike'].iloc[-1],exp,t0,r,div,IV_only=True)
 
@@ -165,7 +165,7 @@ def calc_call_spreads(ch,spot,div,r,t0,exp,kind,min_otm,min_pop,max_point_spread
 #     print(spreads.sort_values(['edge_mid'],inplace=False,ascending=False))
 
 
-def get_spreads(ticker,spot,div,r,exp,kind,min_otm,min_pop,max_point_spread,max_delta_short=100):
+def get_spreads(ticker,spot,div,r,exp,kind,min_otm,min_pop,max_point_spread,max_delta_short=0.5):
 
     if kind == 'Put':
         kind = 'P'
@@ -180,12 +180,12 @@ def get_spreads(ticker,spot,div,r,exp,kind,min_otm,min_pop,max_point_spread,max_
     t0 = t0.strftime('%Y%m%d')
     exp = exp.strftime('%Y%m%d')
 
-    ch = pd.read_csv('/Users/joan/PycharmProjects/ThetaTrader/db/temp_chain.csv')
+    # ch = pd.read_csv('/Users/joan/PycharmProjects/ThetaTrader/db/temp_chain.csv')
 
     # ch = chain.get_chain(ticker, [exp])
-    # ch = chain_multi.get_chain_w_greeks(ticker, [exp],spot = spot,div = div)
-    # ch = ch[exp]
-    # print(ch)
+    ch = chain_multi.get_chain_w_greeks(ticker, [exp],spot = spot,div = div)
+
+    print(ch)
 
     # ch.to_csv('/Users/joan/PycharmProjects/ThetaTrader/db/temp_chain.csv',index=False)
 
@@ -195,22 +195,23 @@ def get_spreads(ticker,spot,div,r,exp,kind,min_otm,min_pop,max_point_spread,max_
     else:
         return calc_call_spreads(ch,spot,div,r,t0,exp,kind,min_otm,min_pop,max_point_spread,delta_annual,max_delta_short)
 
-import time
-t1 = datetime.datetime.now()
-ticker = 'QQQ'
-min_otm = 5
-min_pop = 10
-max_point = 20
-max_delta = 0.4
-puts = get_spreads(ticker, 335, 0.01, 0.12, datetime.datetime(2021, 5, 21, 0, 0), 'Put', min_otm, min_pop, max_point,max_delta)
-print(puts)
-calls = get_spreads(ticker, 28.76, 0.01, 0.12, datetime.datetime(2021, 5, 21, 0, 0), 'Call', min_otm, min_pop, max_point,max_delta)
-print(calls)
-# # print(puts,calls)
-#
-#
-# print('+1',puts['long'],'P,','-1',puts['short'],'P,','-1',calls['short'],'C,','+1',calls['long'],'C',' Credit:',
-#       round(calls['credit_ask']+puts['credit_ask'],3),' Max Loss:', max(calls['max_loss'],puts['max_loss']),
-#       ' Edge:',round(calls['edge_ask']+puts['edge_ask'],3),' IC Delta:',round((calls['spread_delta']+puts['spread_delta'])*100,3))
-#
-print('Time: '+str(datetime.datetime.now()-t1))
+if __name__ == '__main__':
+    import time
+    t1 = datetime.datetime.now()
+    ticker = 'SPY'
+    min_otm = 10
+    min_pop = 70
+    max_point = 10
+    # max_delta = 0.4
+    puts = get_spreads(ticker, 437, 0.08, 0.18, datetime.datetime(2021, 9, 17, 0, 0), 'Put', min_otm, min_pop, max_point)
+    print(puts)
+    # calls = get_spreads(ticker, 28.76, 0.01, 0.12, datetime.datetime(2021, 5, 21, 0, 0), 'Call', min_otm, min_pop, max_point)
+    # print(calls)
+    # # print(puts,calls)
+    #
+    #
+    # print('+1',puts['long'],'P,','-1',puts['short'],'P,','-1',calls['short'],'C,','+1',calls['long'],'C',' Credit:',
+    #       round(calls['credit_ask']+puts['credit_ask'],3),' Max Loss:', max(calls['max_loss'],puts['max_loss']),
+    #       ' Edge:',round(calls['edge_ask']+puts['edge_ask'],3),' IC Delta:',round((calls['spread_delta']+puts['spread_delta'])*100,3))
+    #
+    print('Time: '+str(datetime.datetime.now()-t1))

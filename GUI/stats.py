@@ -80,10 +80,30 @@ class MyApp1(QMainWindow, Ui_Error): #gui class
         # self.refresh()
         # self.create_plots()
 
-
-
-    #
+        self.label_13.setText(str(round(stats['alpha'], 2)))
+        self.label_14.setText(str(round(stats['beta'], 2)))
+        self.label_24.setText(str(round(stats['best_pf']*100,2))+'%')
+        self.label_25.setText(str(round(stats['best_bm'] * 100, 2)) + '%')
+        self.label_27.setText(str(round(stats['worst_pf']*100,2))+'%')
+        self.label_28.setText(str(round(stats['worst_bm'] * 100, 2)) + '%')
+        self.val_5.setText(str(round(stats['sharpe_pf'] , 2)) )
+        self.label_15.setText(str(round(stats['sharpe_bm'], 2)))
+        self.val_6.setText(str(round(stats['sortino_pf'], 2)))
+        self.label_16.setText(str(round(stats['sortino_bm'], 2)))
+        self.label_19.setText(str(round(stats['skew_pf'], 2)))
+        self.label_20.setText(str(round(stats['skew_bm'], 2)))
+        self.label_21.setText(str(round(stats['kurtosis_pf'], 2)))
+        self.label_22.setText(str(round(stats['kurtosis_bm'], 2)))
+        self.label_17.setText(str(round(stats['max_dd_pf'] * 100, 2)) + '%')
+        self.label_18.setText(str(round(stats['max_dd_bm'] * 100, 2)) + '%')
+        self.val_3.setText(str(round(stats['cagr_pf'] * 100, 2)) + '%')
+        self.label_3.setText(str(round(stats['cagr_bm'] * 100, 2)) + '%')
+        self.val_2.setText(str(round(stats['comp_pf'] * 100, 2)) + '%')
+        self.label_2.setText(str(round(stats['comp_bm'] * 100, 2)) + '%')
+        self.label_11.setText(str(round(stats['vol_pf'] * 100, 2)) + '%')
+        self.label_12.setText(str(round(stats['vol_bm'] * 100, 2)) + '%')
     # def refresh(self):
+
     #
     #
     #
